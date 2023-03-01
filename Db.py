@@ -1,39 +1,6 @@
-import pymongo
-import pandas as pd
-
-
-
-# data = getData(file_path='/Users/taipm/Documents/GitHub/NhanA2/Data/BINNIES/Images/CONG TY BINNIES UK LIMITED_NHAN VIEN_14.xlsm')
-# print(data)
-def save_to_mongodb(data):
-    # Kết nối tới CSDL MongoDb
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["mydatabase"]
-    collection = db["mycollection"]
-    
-    # Thêm trường "Sent email" với giá trị False
-    data['Sent email'] = False
-    
-    # Đổi tên trường từ tiếng Việt sang tiếng Anh
-    data = {
-        'Contract holder': data['Chủ hợp đồng:'],
-        'Contract number': data['Số hợp đồng:'],
-        'Validity': data['Hiệu lực:'],
-        'Beneficiary name': data['Họ tên NĐBH:'],
-        'Year of birth': data['Năm sinh:'],
-        'ID card/CCCD': data['CMND/CCCD:'],
-        'Email': data['EMAIL:'],
-        'Sent email': data['Sent email']
-    }
-    
-    # Lưu dữ liệu vào CSDL
-    result = collection.insert_one(data)
-    
-    # In thông tin về dữ liệu đã được lưu
-    print("Data saved with ID:", result.inserted_id)
-
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import pandas as pd
 
 class MongoDB:
     def __init__(self, db_name, xls_data_path, db_collection):
@@ -41,19 +8,6 @@ class MongoDB:
         self.db = self.client[db_name]
         self.collection = db_collection
         self.xls_data_path = xls_data_path 
-    
-    def get_data(self, sheetName = 'Data'):
-        fileName = self.xls_data_path
-        data = pd.read_excel(fileName, sheet_name=sheetName, index_col=None, header=None)
-        data.dropna(inplace=True)
-        dict_list = []
-
-        for row in data.itertuples():
-            dict = {}
-            dict[row[1]] = row[2]
-            dict_list.append(dict)
-
-        return dict_list
     
     def create(self, data):
         if self.collection:
@@ -94,3 +48,40 @@ class MongoDB:
             return result.deleted_count
         else:
             raise ValueError("Collection not set")
+
+
+from pymongo import MongoClient
+
+class MongoDb:
+    def __init__(self, host, port, username, password, database):
+        self.client = MongoClient(host=host, port=port, username=username, password=password)
+        self.db = self.client[database]
+
+    def create(self, collection_name, document):
+        collection = self.db[collection_name]
+        result = collection.insert_one(document)
+        return result.inserted_id
+
+    def read(self, collection_name, filter=None):
+        collection = self.db[collection_name]
+        documents = collection.find(filter)
+        return [doc for doc in documents]
+
+    def update(self, collection_name, filter, update):
+        collection = self.db[collection_name]
+        result = collection.update_one(filter, {'$set': update})
+        return result.modified_count
+
+    def delete(self, collection_name, filter):
+        collection = self.db[collection_name]
+        result = collection.delete_one(filter)
+        return result.deleted_count
+
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+db_host = config['DATABASE']['host']
+db_port = config['DATABASE']['port']
+db_name = config['DATABASE']['name']

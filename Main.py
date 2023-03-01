@@ -14,22 +14,27 @@ def generate_Img(img_path, new_img_path, data, fontsize, font_color):
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font= "Arial.ttf", size=fontsize)
 
-    x, y = 100, 100 # Tọa độ góc trái trên của bảng dữ liệu
-    #TAIPM: manual adjust
-    x = x + 30 + 100
-    y = y + 50 + 150
-    padding = 25 # Khoảng cách giữa các ô
-    khoang_cach = 45
+    # x, y = 100, 100 # Tọa độ góc trái trên của bảng dữ liệu
+    # #TAIPM: manual adjust
+    # x = x + 30 + 100
+    # y = y + 50 + 150
+    # padding = 25 # Khoảng cách giữa các ô
+    #khoang_cach = 45
     for i, (key, value) in enumerate(data.items()):
         color = font_color
-        draw.text((x, y + padding + i*khoang_cach), str(key), font=font, fill= color)
-        draw.text((x + 280, y + padding + i*khoang_cach), str(value), font=font, fill= color)
+        draw.text((x, y + padding + i*line_space), str(key), font=font, fill= color)
+        draw.text((x + 280, y + padding + i*line_space), str(value), font=font, fill= color)
 
     image.save(new_img_path)
 
 
 def get_img(item):
-  file_name = f"{str(item['CMND/CCCD:'])}_{str(item['EMAIL:']).replace('@','_').replace('.','_')}_{item['Họ tên NĐBH:']}_{str(item['Năm sinh:']).replace('/','_').replace('-','_').replace(' 00:00:00','')}"
+  
+  file_name = f"{str(item['CMND/CCCD:'])}"+\
+        f"_{str(item['EMAIL:']).replace('@','_').replace('.','_')}"+\
+        f"_{item['Họ tên NĐBH:']}"+\
+        f"_{str(item['Năm sinh:']).replace('/','_').replace('-','_').replace(' 00:00:00','')}"
+  
   return file_name
 
 def make_images(file_path, file_mau, img_folder, font_size=30):
@@ -58,7 +63,7 @@ def make_images(file_path, file_mau, img_folder, font_size=30):
             'CMND/CCCD': item['CMND/CCCD:']
         }
         print(data)
-        generate_Img(img_path, new_img_path, data, fontsize=font_size, font_color='Black')
+        generate_Img(img_path, new_img_path, data, fontsize=font_size, font_color=font_color)
         count_img += 1
     return count_img
 
@@ -110,7 +115,8 @@ def NotifyEmail(xlsm_files):
 
             result = sendEmail(title=email_title,to_email=email_to,img_path=img_path)
             if len(str(result)) > 0:
-                Erros.append(result)
+                Errors.append(result)
+
             count_email = count_email + 1
             count = count + 1
             if count_email % 10 == 0:
@@ -128,14 +134,22 @@ def create_folders():
         with open(card_path, 'w'): 
            print(f'Chưa có file mẫu: .jpg')
 
-current_dir = os.getcwd()
-companyName = 'BINNIES'
-img_folder = f'{current_dir}/Data/{companyName}/images'
-card_path = f'{current_dir}/Data/{companyName}/MAU THE_KO QUA MG_48.jpg'
-data_folder = f'{current_dir}/Data/{companyName}'
-font_size = 30
-Erros = [] 
 
+companyName = 'BINNIES'
+card_name = 'MAU THE_KO QUA MG_48.jpg'
+font_size = 30
+font_color = 'Black'
+line_space = 40
+x, y = 100, 100 # Tọa độ góc trái trên của bảng dữ liệu
+x = x + 30 + 100
+y = y + 50 + 150
+padding = 25 # Khoảng cách giữa các ô
+
+current_dir = os.getcwd()
+img_folder = f'{current_dir}/Data/{companyName}/images'
+card_path = f'{current_dir}/Data/{companyName}/{card_name}'
+data_folder = f'{current_dir}/Data/{companyName}'
+Errors = [] 
 xlsm_files = glob.glob(f'{data_folder}/*.xlsm')
 
 create_folders()
